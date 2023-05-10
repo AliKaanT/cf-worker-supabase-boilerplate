@@ -20,24 +20,17 @@ app.onError(async (err: Error, c: Context) => {
     const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE);
     if (err instanceof CustomError) {
       await err.saveErrorToDatabase(supabase, c.req.headers.get('cf-connecting-ip'));
-      const error = err.toJSON();
-      return c.json(
-        {
-          status: 'error',
-          code: error.code,
-          message: error.message,
-          devMessage: error.devMessage,
-          data: error.data,
-        },
-        400
-      );
+      return err.returnDevResponse(c);
+    } else {
+      // if its not CustomError
+      await supabase.from('errors').insert({
+        code: 'unknown',
+        extra: err,
+      });
+      return c.json({ status: 'error', message: err?.message }, 500);
     }
-    await supabase.from('errors').insert({
-      code: 'unknown',
-      extra: err,
-    });
-    return c.json({ status: 'error', message: err?.message }, 500);
   } catch (err) {
+    // if something goes wrong, when handling error
     return c.text('!Internal Server Error', 500);
   }
 });

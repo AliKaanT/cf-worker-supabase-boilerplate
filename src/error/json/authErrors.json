@@ -1,4 +1,8 @@
 {
+  "UnAuthorized": {
+    "message": "Sorry, you are not authorized to access this resource",
+    "devMessage": "User is not authorized to access this resource"
+  },
   "AUTH-001": {
     "message": "",
     "devMessage": "Zod Validation Error while logging in"

@@ -19,7 +19,7 @@ app.post('/login', async (c: Context) => {
     password: z.string(),
   });
   const body = validationSchema.safeParse(reqBody);
-  if (!body.success) throw new CustomError('AUTH-001', { error: body.error });
+  if (!body.success) throw new CustomError('AUTH-001', { error: body.error }, 'ValidationError');
 
   const supabase: SupabaseClient = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_ANON);
 
@@ -31,11 +31,11 @@ app.post('/login', async (c: Context) => {
   if (error !== null) {
     switch (error.message) {
       case 'Invalid login credentials':
-        throw new CustomError('AUTH-002', { error });
+        throw new CustomError('AUTH-002', { error }, 'AuthenticationError');
       case 'Email not confirmed':
-        throw new CustomError('AUTH-004', { error });
+        throw new CustomError('AUTH-004', { error }, 'AuthenticationError');
       default:
-        throw new CustomError('AUTH-003', { error });
+        throw new CustomError('AUTH-003', { error }, 'SupabaseError');
     }
   }
 
@@ -56,7 +56,7 @@ app.post('/register', async (c: Context) => {
   });
   const body = validationSchema.safeParse(reqBody);
 
-  if (!body.success) throw new CustomError('AUTH-005', { error: body.error });
+  if (!body.success) throw new CustomError('AUTH-005', { error: body.error }, 'ValidationError');
 
   const supabase: SupabaseClient = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_ANON);
 
@@ -73,8 +73,8 @@ app.post('/register', async (c: Context) => {
     },
   });
 
-  if (error !== null) throw new CustomError('AUTH-006', { error });
-  if (data.user?.identities?.length === 0) throw new CustomError('AUTH-007', { error });
+  if (error !== null) throw new CustomError('AUTH-006', { error }, 'SupabaseError');
+  if (data.user?.identities?.length === 0) throw new CustomError('AUTH-007', { error }, 'AuthenticationError');
 
   return c.json({ status: 'success', message: 'Successfully registered, Please confirm your email' }, 200);
 });
@@ -102,12 +102,12 @@ async function AuthMW(c: Context, next: () => Promise<void>): Promise<Response |
     const refresh_token = c.req.cookie('AUTH-REFRESH-TOKEN') ?? c.req.header('AUTH-REFRESH-TOKEN') ?? '';
 
     const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-    if (error !== null) return c.text('Unauthorized', 401);
+    if (error !== null) throw new CustomError('UnAuthorized', { error }, 'AuthorizationError');
 
     c.set('supabaseUserClient', supabase);
     await next();
   } catch (e) {
-    return c.text('Unauthorized', 401);
+    throw new CustomError('UnAuthorized', {}, 'AuthorizationError');
   }
 }
 
