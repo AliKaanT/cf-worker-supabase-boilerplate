@@ -79,12 +79,12 @@ app.post('/register', async (c: Context) => {
   return c.json({ status: 'success', message: 'Successfully registered, Please confirm your email' }, 200);
 });
 
-app.get('/check-session', AuthMW, async (c: Context) => {
-  const supabase: SupabaseClient = c.get('supabase');
-
-  const { error } = await supabase.auth.getUser();
-  if (error !== null) throw new CustomError('AUTH-008', { error });
-
+app.get('/check-session', async (c: Context) => {
+  try {
+    await AuthMW(c, async () => {});
+  } catch (e) {
+    return c.json({ status: 'success', message: 'Session is not valid', data: false }, 200);
+  }
   return c.json({ status: 'success', message: 'Session is valid', data: true }, 200);
 });
 

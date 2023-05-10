@@ -82,3 +82,28 @@
   "statusCode": 400
 }
 ```
+
+# GET: /check-session
+
+Checks if the session is valid and returns true or false
+### Request
+
+```diff
+should include cookies or headers named
++AUTH-ACCESS-TOKEN
++AUTH-REFRESH-TOKEN
+```
+### Response
+
+#### success
+
+```json
+{
+  {
+    "status"  : "success",
+    "message" : "Session is valid",
+    "data"    : true | false
+  },
+  "statusCode": 200
+}
+```
