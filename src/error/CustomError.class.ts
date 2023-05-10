@@ -85,7 +85,7 @@ export default class CustomError extends Error {
       case ErrorType.SupabaseError:
         return c.json(response, 500);
       case ErrorType.AuthorizationError:
-        return c.json(response, 401);
+        return c.text('Unauthorized', 401);
       default:
         return c.json(response, 500);
     }

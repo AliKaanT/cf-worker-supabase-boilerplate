@@ -102,12 +102,12 @@ async function AuthMW(c: Context, next: () => Promise<void>): Promise<Response |
     const refresh_token = c.req.cookie('AUTH-REFRESH-TOKEN') ?? c.req.header('AUTH-REFRESH-TOKEN') ?? '';
 
     const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-    if (error !== null) throw new CustomError('UnAuthorized', { error }, 'AuthorizationError');
+    if (error !== null) throw new CustomError('Unauthorized', { error }, 'AuthorizationError');
 
     c.set('supabaseUserClient', supabase);
     await next();
   } catch (e) {
-    throw new CustomError('UnAuthorized', {}, 'AuthorizationError');
+    throw new CustomError('Unauthorized', {}, 'AuthorizationError');
   }
 }
 
