@@ -1,0 +1,34 @@
+{
+  "AUTH-001": {
+    "message": "",
+    "devMessage": "Zod Validation Error while logging in"
+  },
+  "AUTH-002": {
+    "message": "",
+    "devMessage": "Invalid login credintials while authenticating user"
+  },
+  "AUTH-003": {
+    "message": "Sorry, We are not able to authenticate you at this time due to technical issues on our end. Please try again later. If the problem persists, please contact us",
+    "devMessage": "Supabase Error while authenticating user"
+  },
+  "AUTH-004": {
+    "message": "",
+    "devMessage": "User email is not confirmed"
+  },
+  "USER-008": {
+    "message": "Sorry, we are not able to access your account at this time due to technical issues on our end. Please try again later. If the problem persists, please contact us",
+    "devMessage": "Can't access auth.user table"
+  },
+  "AUTH-005": {
+    "message": "",
+    "devMessage": "Zod Error while signing up"
+  },
+  "AUTH-006": {
+    "message": "",
+    "devMessage": "Supabase Error while creating user"
+  },
+  "AUTH-007": {
+    "message": "",
+    "devMessage": "There is already a user with this email address"
+  }
+}

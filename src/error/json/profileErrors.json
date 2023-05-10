@@ -1,0 +1,26 @@
+{
+  "PROFILE-0": {
+    "message": "Sorry, an error occured",
+    "devMessage": "Supabase error while accessing profile"
+  },
+  "PROFILE-1": {
+    "message": "Sorry, an error occured",
+    "devMessage": "Supabase error while gettin authenticated user"
+  },
+  "PROFILE-2": {
+    "message": "Sorry, an error occured",
+    "devMessage": "The username is already taken"
+  },
+  "PROFILE-3": {
+    "message": "Sorry, an error occured",
+    "devMessage": "Validation error for username"
+  },
+  "PROFILE-4": {
+    "message": "Sorry, an error occured",
+    "devMessage": "Supabase error while updating profile"
+  },
+  "PROFILE-5": {
+    "message": "Sorry, an error occured",
+    "devMessage": "Supabase error while updating auth.users metadata. This is critical issue and must be handled manually."
+  }
+}
