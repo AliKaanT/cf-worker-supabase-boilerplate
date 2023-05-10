@@ -56,13 +56,14 @@ export default class CustomError extends Error {
     return object;
   }
 
-  public async saveErrorToDatabase(supabase: SupabaseClient): Promise<boolean> {
+  public async saveErrorToDatabase(supabase: SupabaseClient, ip: string | null): Promise<boolean> {
     const { error } = await supabase.from('errors').insert({
       type: this.type.toString(),
       code: this.error.code,
       message: this.error.message,
       devMessage: this.error.devMessage,
       data: this.error.data,
+      ip: ip ?? null,
       extra: null,
     });
     if (error !== null) {

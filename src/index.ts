@@ -13,11 +13,13 @@ const app = new Hono<{
 
 app.route('/', auth);
 
+// eslint-disable-next-line
+// @ts-ignore
 app.onError(async (err: Error, c: Context) => {
   try {
     const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE);
     if (err instanceof CustomError) {
-      await err.saveErrorToDatabase(supabase);
+      await err.saveErrorToDatabase(supabase, c.req.headers.get('cf-connecting-ip'));
       const error = err.toJSON();
       return c.json(
         {
