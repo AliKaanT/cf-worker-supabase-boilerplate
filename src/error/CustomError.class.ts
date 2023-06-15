@@ -1,14 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import importedErrors from './errors';
 import type { Context } from 'hono';
-interface CustomErrorType {
+interface ICustomError {
   code: string;
   message: string;
   devMessage: string;
   data?: object;
-  type: ErrorType;
+  type: ErrorTypes;
 }
-enum ErrorType {
+
+export enum ErrorTypes {
   'ValidationError' = 'ValidationError',
   'AuthenticationError' = 'AuthenticationError',
   'AuthorizationError' = 'AuthorizationError',
@@ -16,37 +17,45 @@ enum ErrorType {
   'UnknownError' = 'UnknownError',
   'SupabaseError' = 'SupabaseError',
 }
+
+const statusCodes: Record<ErrorTypes, number> = {
+  ValidationError: 400,
+  AuthenticationError: 401,
+  AuthorizationError: 403,
+  InternalError: 500,
+  UnknownError: 500,
+  SupabaseError: 500,
+};
+
 const errors: Record<string, { message: string; devMessage: string }> = importedErrors;
-export default class CustomError extends Error {
-  private readonly error: CustomErrorType;
+export default class CustomError extends Error implements ICustomError {
+  public readonly code: string;
+  public readonly message: string;
+  public readonly devMessage: string;
+  public readonly data?: object;
+  public readonly type: ErrorTypes;
 
-  private readonly type: ErrorType;
-
-  constructor(code: string, data?: object, type?: ErrorType | string) {
+  constructor(code: string, data: object, type: ErrorTypes) {
     super();
-    // next 2 line of code assigns the type of error based on "type" parameter which could be either string or directly ErrorType enum
-    if (typeof type === 'string') {
-      this.type = ErrorType[type as keyof typeof ErrorType] ?? ErrorType.UnknownError;
-    } else {
-      this.type = type ?? ErrorType.UnknownError;
-    }
-    this.error = {
-      code,
-      ...errors[code],
-      data,
-      type: this.type,
-    };
+    this.code = code;
+    this.message = errors[code]?.message ?? 'Unknown Error Code';
+    this.devMessage = errors[code]?.devMessage ?? 'Unknown Error Code';
+    this.type = type ?? ErrorTypes.UnknownError;
+    this.data = data;
   }
 
-  public toProdJSON(): Pick<CustomErrorType, 'code' | 'message'> & { data?: object } {
-    // this function returns the error object without devMessage also it removes data property if it's not allowed
+  /**
+   *
+   * @returns {object} returns the error object without devMessage also it removes data property if it's not allowed
+   */
+  private toProdJSON(): Pick<ICustomError, 'code' | 'message' | 'data'> {
     const object = {
-      code: this.error.code,
-      message: this.error.message,
-      data: this.error.data,
+      code: this.code,
+      message: this.message,
+      data: this.data,
     };
 
-    const AllowedTypes = [ErrorType.ValidationError];
+    const AllowedTypes = [ErrorTypes.ValidationError];
 
     if (!AllowedTypes.includes(this.type)) {
       delete object.data;
@@ -55,51 +64,43 @@ export default class CustomError extends Error {
     return object;
   }
 
-  public returnDevResponse(c: Context): Response {
-    const response = { status: 'error', ...this.error };
+  /**
+   *
+   * @param c is a instance of Context class from hono
+   * @param isDev is a boolean which tells if the error is in development mode or not, if it's null then it checks the NODE_ENV
+   * @returns {Response} returns the response object it removes devMessage depends on Env type
+   */
+  public getResponseObject(c: Context, isDev?: boolean): Response {
+    if (isDev === undefined) {
+      isDev = process.env.NODE_ENV?.toLocaleLowerCase() === 'development';
+    }
 
-    switch (this.type) {
-      case ErrorType.ValidationError:
-      case ErrorType.AuthenticationError:
-        return c.json(response, 400);
-      case ErrorType.InternalError:
-      case ErrorType.UnknownError:
-      case ErrorType.SupabaseError:
-        return c.json(response, 500);
-      case ErrorType.AuthorizationError:
-        return c.json(response, 401);
-      default:
-        return c.json(response, 500);
+    console.log(process.env.NODE_ENV);
+
+    if (isDev) {
+      const response = { status: 'error', ...this };
+      return c.json(response, statusCodes[this.type]); // type is the status code
+    } else {
+      const response = { status: 'error', ...this.toProdJSON() };
+      return c.json(response, statusCodes[this.type]); // type is the status code
     }
   }
 
-  public returnProdResponse(c: Context): Response {
-    const response = { status: 'error', ...this.toProdJSON() };
-
-    switch (this.type) {
-      case ErrorType.ValidationError:
-      case ErrorType.AuthenticationError:
-        return c.json(response, 400);
-      case ErrorType.InternalError:
-      case ErrorType.UnknownError:
-      case ErrorType.SupabaseError:
-        return c.json(response, 500);
-      case ErrorType.AuthorizationError:
-        return c.text('Unauthorized', 401);
-      default:
-        return c.json(response, 500);
-    }
-  }
-
+  /**
+   *
+   * @param supabase is a instance of SupabaseClient class from supabase/supabase-js
+   * @param ip of the user who got the error. Nullable
+   * @returns {boolean} returns true if the error is saved to database successfully
+   */
   public async saveErrorToDatabase(supabase: SupabaseClient, ip: string | null): Promise<boolean> {
     const { error } = await supabase.from('errors').insert({
       type: this.type.toString(),
-      code: this.error.code,
-      message: this.error.message,
-      devMessage: this.error.devMessage,
-      data: this.error.data,
+      code: this.code,
+      message: this.message,
+      devMessage: this.devMessage,
+      data: this.data,
       ip: ip ?? null,
-      extra: null,
+      extra: null, // TODO: add extra
     });
     if (error !== null) {
       return false;

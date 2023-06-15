@@ -16,7 +16,7 @@ describe('Worker', () => {
   });
 
   it('should return Hello World', async () => {
-    const resp = await worker.fetch();
+    const resp = await worker.fetch('/');
     if (resp !== null) {
       const text = await resp.text();
       expect(text).toMatchInlineSnapshot(`"Hello World!"`);

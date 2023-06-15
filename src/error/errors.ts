@@ -1,8 +1,5 @@
 import authErrors from './json/authErrors.json';
-import profileErrors from './json/profileErrors.json';
-let errors = {};
 
-errors = { ...errors, ...authErrors };
-errors = { ...errors, ...profileErrors };
+const errors = Object.assign({}, authErrors);
 
 export default errors;
