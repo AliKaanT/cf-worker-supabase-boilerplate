@@ -1,11 +1,10 @@
 import { Context } from 'hono';
-import { createClient } from '@supabase/supabase-js';
 import CustomError from './CustomError.class';
 import ENV from '../types/ContextEnv.types';
 
 export default async (err: Error, c: Context<ENV>): Promise<Response> => {
   try {
-    const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE);
+    const supabase = c.get('SERVICE_CLIENT');
     if (err instanceof CustomError) {
       await err.saveErrorToDatabase(supabase, c.req.headers.get('cf-connecting-ip'));
       return err.getResponseObject(c);

@@ -1,4 +1,8 @@
 {
+  "Unauthenticated": {
+    "message": "You need to login to access this resource",
+    "devMessage": "User is not authenticated"
+  },
   "Unauthorized": {
     "message": "Sorry, you are not authorized to access this resource",
     "devMessage": "User is not authorized to access this resource"
