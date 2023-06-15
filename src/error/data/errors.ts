@@ -1,4 +1,4 @@
-import authErrors from './json/authErrors.json';
+import authErrors from './authErrors.json';
 
 const errors = Object.assign({}, authErrors);
 

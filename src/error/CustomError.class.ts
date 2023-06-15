@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import importedErrors from './errors';
+import importedErrors from './data/errors';
 import type { Context } from 'hono';
 interface ICustomError {
   code: string;

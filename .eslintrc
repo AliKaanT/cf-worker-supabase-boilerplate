@@ -23,6 +23,7 @@
   },
   "rules": {
     "@typescript-eslint/naming-convention": 0,
+    "@typescript-eslint/consistent-type-imports": 0,
     "prettier/prettier": [
       "error",
       {
