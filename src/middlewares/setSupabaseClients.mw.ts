@@ -7,8 +7,8 @@ export default async (c: Context<ENV>, next: any): Promise<void> => {
   const ANON_CLIENT = createClient<Database>(c.env.SUPABASE_URL, c.env.SUPABASE_ANON);
   const SERVICE_CLIENT = createClient<Database>(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE);
 
-  c.env.ANON_CLIENT = ANON_CLIENT;
-  c.env.SERVICE_CLIENT = SERVICE_CLIENT;
+  c.set('ANON_CLIENT', ANON_CLIENT);
+  c.set('SERVICE_CLIENT', SERVICE_CLIENT);
 
   return next();
 };
