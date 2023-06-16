@@ -92,7 +92,7 @@ export default class CustomError extends Error implements ICustomError {
    * @param ip of the user who got the error. Nullable
    * @returns {boolean} returns true if the error is saved to database successfully
    */
-  public async saveErrorToDatabase(supabase: SupabaseClient, ip: string | null): Promise<boolean> {
+  public async saveErrorToDatabase(supabase: SupabaseClient, ip: string | null, path: string): Promise<boolean> {
     const { error } = await supabase.from('errors').insert({
       type: this.type.toString(),
       code: this.code,
@@ -101,6 +101,7 @@ export default class CustomError extends Error implements ICustomError {
       data: this.data,
       ip: ip ?? null,
       extra: null, // TODO: add extra
+      path,
     });
     if (error !== null) {
       return false;

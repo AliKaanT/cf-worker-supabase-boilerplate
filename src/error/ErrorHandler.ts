@@ -6,7 +6,7 @@ export default async (err: Error, c: Context<ENV>): Promise<Response> => {
   try {
     const supabase = c.get('SERVICE_CLIENT');
     if (err instanceof CustomError) {
-      await err.saveErrorToDatabase(supabase, c.req.headers.get('cf-connecting-ip'));
+      await err.saveErrorToDatabase(supabase, c.req.headers.get('cf-connecting-ip'), c.req.path);
       return err.getResponseObject(c);
     } else {
       // if its not CustomError
