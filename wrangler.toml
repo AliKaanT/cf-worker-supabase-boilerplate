@@ -6,3 +6,4 @@ kv_namespaces = [
 ]
 [vars]
 RESET_PASSWORD_REDIRECT_URL = "http://localhost:3000/sifre-sifirla"
+REGISTER_REDIRECT_URL = "http://localhost:3000/kayit-ol"

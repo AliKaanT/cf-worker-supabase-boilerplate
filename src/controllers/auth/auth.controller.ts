@@ -103,25 +103,31 @@ class Auth implements IAuth {
 
     const supabaseClient = c.get('SERVICE_CLIENT');
 
-    const { error: registerError } = await supabaseClient.auth.admin.createUser({
-      email: body.email,
-      password: body.password,
-      email_confirm: false,
-      user_metadata: {
+    const { data: inviteData, error: inviteError } = await supabaseClient.auth.admin.inviteUserByEmail(body.email, {
+      data: {
         name: body.name,
         surname: body.surname,
         username: body.username,
       },
+      redirectTo: c.env.REGISTER_REDIRECT_URL,
+    });
+
+    if (inviteError !== null) {
+      if (inviteError.message.includes('unique') || inviteError.message.includes('already')) {
+        throw new CustomError('AUTH-001', inviteError, ErrorTypes.AuthenticationError);
+      }
+      throw new CustomError('Supabase', inviteError, ErrorTypes.SupabaseError);
+    }
+
+    const { error: updateError } = await supabaseClient.auth.admin.updateUserById(inviteData.user.id, {
+      password: body.password,
       app_metadata: {
         role: 'user',
       },
     });
 
-    if (registerError !== null) {
-      if (registerError.message.includes('unique') || registerError.message.includes('already')) {
-        throw new CustomError('AUTH-001', registerError, ErrorTypes.AuthenticationError);
-      }
-      throw new CustomError('Supabase', registerError, ErrorTypes.SupabaseError);
+    if (updateError !== null) {
+      throw new CustomError('Supabase', updateError, ErrorTypes.SupabaseError);
     }
 
     return c.json({
