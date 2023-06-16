@@ -49,7 +49,9 @@ class Auth implements IAuth {
       expires_at: Date.now() + 1000 * 60 * 60 * 24 * 30, // 30 days TODO : remember me
     };
 
-    await c.env.KV_AUTH_SESSIONS.put(custom_access_token, JSON.stringify(custom_session));
+    await c.env.KV_AUTH_SESSIONS.put(custom_access_token, JSON.stringify(custom_session), {
+      expiration: custom_session.expires_at,
+    });
 
     setCookie(c, 'AUTH-ACCESS-TOKEN', custom_access_token, {
       path: '/',

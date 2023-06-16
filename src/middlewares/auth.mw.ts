@@ -129,7 +129,10 @@ class AuthClient {
           refresh_token: newSupabaseSession.session?.refresh_token,
           user: newSupabaseSession.user,
           expires_at: custom_session.expires_at,
-        })
+        }),
+        {
+          expiration: custom_session.expires_at,
+        }
       );
 
       this.authSuccess(newSupabaseSession?.session, newSupabaseSession?.user, custom_session.expires_at);
