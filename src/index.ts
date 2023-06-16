@@ -12,13 +12,11 @@ const app = new Hono<ENV>();
 app.use('/*', setSupabaseClientsMw);
 
 app.post('/auth/login', Auth.login);
+app.post('/auth/logout', authMw(AuthRoles.Any), Auth.logout);
+app.get('/auth/check-session', authMw(AuthRoles.Any), Auth.checkSession);
 
-app.get('/test', authMw(AuthRoles.Public), async (c) => {
-  const supabase = c.get('SERVICE_CLIENT');
-
-  const res = await supabase.from('users').select('*');
-
-  return c.json(res, 200);
+app.get('/test', async (c) => {
+  return c.text('f');
 });
 
 app.onError(ErrorHandler);

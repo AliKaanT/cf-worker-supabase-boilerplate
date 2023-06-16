@@ -1,18 +1,24 @@
 import { Context } from 'hono';
 import ENV from '../types/ContextEnv.types';
-import { AuthRoles, CustomAuthSession } from '../controllers/auth/auth.types';
+import { AuthRoles, CustomAuthSession, KVAuthSession } from '../controllers/auth/auth.types';
 import CustomError, { ErrorTypes } from '../error/CustomError.class';
 import { getCookie } from 'hono/cookie';
-import { AuthSession, User } from '@supabase/supabase-js';
+import { AuthSession, Session, User } from '@supabase/supabase-js';
 
 class AuthClient {
-  private isAuth: boolean = false;
-  private readonly role: AuthRoles = AuthRoles.Public; // TODO : role system
   private readonly c: Context<ENV>;
-  private reason: string = '';
+  private isAuth: boolean = false;
+  private role: AuthRoles = AuthRoles.Any; // TODO : role system
+
+  private sb_aceess_token: string = '';
+  private sb_refresh_token: string = '';
+  private readonly custom_access_token: string;
+  private user: User | null = null;
+  private expires_at: number = 0;
 
   constructor(c: Context<ENV>) {
     this.c = c;
+    this.custom_access_token = this.c.req.header('AUTH-ACCESS-TOKEN') ?? getCookie(this.c, 'AUTH-ACCESS-TOKEN') ?? '';
   }
 
   public async init(): Promise<void> {
@@ -21,40 +27,57 @@ class AuthClient {
 
   public getIsAuth = (): boolean => this.isAuth;
   public getRole = (): AuthRoles => this.role;
-  public getReason = (): string => this.reason;
 
-  private async checkCustomSession(custom_access_token: string): Promise<CustomAuthSession | null> {
+  public getStorableSession(): CustomAuthSession | null {
+    if (!this.isAuth) return null;
+    if (this.user === null) return null;
+    return {
+      custom_access_token: this.custom_access_token,
+      sb_access_token: this.sb_aceess_token,
+      sb_refresh_token: this.sb_refresh_token,
+      user: this.user,
+      role: this.role,
+      expires_at: this.expires_at,
+    };
+  }
+
+  private authSuccess(role: AuthRoles, sb_session: Session, user: User, expires_at: number): void {
+    this.isAuth = true;
+    this.role = role;
+    this.sb_aceess_token = sb_session.access_token;
+    this.sb_refresh_token = sb_session.refresh_token;
+    this.user = user;
+    this.expires_at = expires_at;
+  }
+
+  private async checkCustomSession(custom_access_token: string): Promise<KVAuthSession | null> {
     const kv_value = await this.c.env.KV_AUTH_SESSIONS.get(custom_access_token);
 
     if (kv_value === null) {
-      this.reason = 'KV value is null';
       return null;
     }
 
-    const custom_session: CustomAuthSession = JSON.parse(kv_value);
+    const custom_session: KVAuthSession = JSON.parse(kv_value);
 
     if (custom_session.expires_at < Date.now()) {
-      this.reason = 'Session expired';
       return null;
     }
 
     return custom_session;
   }
 
-  private async createSupabaseSession(custom_session: CustomAuthSession): Promise<{
+  private async createSupabaseSession(custom_session: KVAuthSession): Promise<{
     user: User | null;
     session: AuthSession | null;
   } | null> {
-    const { error: authError } = await this.c.get('ANON_CLIENT').auth.setSession({
+    const { data: authData, error: authError } = await this.c.get('ANON_CLIENT').auth.setSession({
       access_token: custom_session.access_token,
       refresh_token: custom_session.refresh_token,
     });
 
-    if (authError === null) {
+    if (authError === null && authData.session !== null && authData.user !== null) {
       // Both sessions are valid
-      this.isAuth = true;
-      this.reason = 'Both sessions are valid';
-      return null;
+      this.authSuccess(AuthRoles.Any, authData?.session, authData?.user, custom_session.expires_at);
     }
 
     // Custom session is valid but supabase session is not, Lets make a new supabase session
@@ -65,7 +88,6 @@ class AuthClient {
     });
 
     if (mailErr !== null) {
-      this.reason = 'Failed to generate magic link';
       return null;
     }
 
@@ -76,7 +98,6 @@ class AuthClient {
     });
 
     if (verifyError !== null) {
-      this.reason = 'Failed to verify magic link';
       return null;
     }
 
@@ -88,7 +109,6 @@ class AuthClient {
       const custom_access_token = this.c.req.header('AUTH-ACCESS-TOKEN') ?? getCookie(this.c, 'AUTH-ACCESS-TOKEN');
 
       if (custom_access_token === null || custom_access_token === undefined || custom_access_token === '') {
-        this.reason = 'No custom access token';
         return;
       }
 
@@ -98,7 +118,7 @@ class AuthClient {
 
       // This function either sets the session or creates a new session
       const newSupabaseSession = await this.createSupabaseSession(custom_session);
-      if (newSupabaseSession === null) return;
+      if (newSupabaseSession === null || newSupabaseSession.session === null || newSupabaseSession.user === null) return;
 
       // If code reaches here, it means that the custom session is valid but the supabase session is not
       // and we are putting the new supabase session in KV_AUTH_SESSIONS
@@ -112,11 +132,8 @@ class AuthClient {
         })
       );
 
-      this.isAuth = true;
-      this.reason = 'Custom session is valid but supabase session is not';
-    } catch (err) {
-      this.reason = 'Unknown error';
-    }
+      this.authSuccess(AuthRoles.Any, newSupabaseSession?.session, newSupabaseSession?.user, custom_session.expires_at);
+    } catch (err) {}
   }
 }
 
@@ -127,7 +144,11 @@ export default (role: AuthRoles): ((c: Context<ENV>, next: any) => Promise<void>
 
     if (!authClient.getIsAuth()) throw new CustomError('Unauthenticated', {}, ErrorTypes.AuthenticationError);
     // if (authClient.getRole() !== role) throw new CustomError('Unauthorized', {}, ErrorTypes.AuthorizationError);
-    // TODO : role system & maybe we can set this AuthClient in the context with additional object properties we can even store the user object in the context
+    // TODO : role system
+
+    const session = authClient.getStorableSession();
+    if (session !== null) c.set('CUSTOM_AUTH_SESSION', session);
+
     await next();
   };
 };

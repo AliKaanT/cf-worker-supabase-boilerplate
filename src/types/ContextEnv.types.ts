@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { KVNamespace } from '@cloudflare/workers-types';
+import { CustomAuthSession } from '../controllers/auth/auth.types';
 export default interface ENV {
   Bindings: {
     SUPABASE_URL: string;
@@ -10,5 +11,6 @@ export default interface ENV {
   Variables: {
     ANON_CLIENT: SupabaseClient;
     SERVICE_CLIENT: SupabaseClient;
+    CUSTOM_AUTH_SESSION: CustomAuthSession;
   };
 }

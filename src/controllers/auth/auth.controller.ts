@@ -5,8 +5,8 @@ import { loginReqBodySchema } from './schema';
 import { z } from 'zod';
 import CustomError, { ErrorTypes } from '../../error/CustomError.class';
 import { generateRandomString } from '../../helpers/general.helper';
-import { setCookie, getCookie } from 'hono/cookie';
-import { CustomAuthSession } from './auth.types';
+import { setCookie } from 'hono/cookie';
+import { KVAuthSession } from './auth.types';
 export interface IAuth {
   login: (c: Context<ENV>) => Promise<Response>;
   logout: (c: Context<ENV>) => Promise<Response>;
@@ -35,7 +35,7 @@ class Auth implements IAuth {
 
     const custom_access_token = generateRandomString(128);
 
-    const custom_session: CustomAuthSession = {
+    const custom_session: KVAuthSession = {
       access_token: loginData.session.access_token,
       refresh_token: loginData.session.refresh_token,
       user: loginData.user,
@@ -54,6 +54,26 @@ class Auth implements IAuth {
       data: {
         'AUTH-ACCESS-TOKEN': custom_access_token,
       },
+    });
+  }
+
+  public async logout(c: Context<ENV>): Promise<Response> {
+    const session = c.get('CUSTOM_AUTH_SESSION');
+
+    await c.env.KV_AUTH_SESSIONS.delete(session.custom_access_token);
+
+    return c.json({
+      message: 'Succesfully logged out.',
+    });
+  }
+
+  public async checkSession(c: Context<ENV>): Promise<Response> {
+    const session = c.get('CUSTOM_AUTH_SESSION');
+
+    return c.json({
+      message: 'Session is valid.',
+      role: session.role,
+      isValid: true,
     });
   }
 }

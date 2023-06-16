@@ -78,10 +78,10 @@ export default class CustomError extends Error implements ICustomError {
     console.log(process.env.NODE_ENV);
 
     if (isDev) {
-      const response = { status: 'error', ...this };
+      const response = { status: 'error', error: { ...this } };
       return c.json(response, statusCodes[this.type]); // type is the status code
     } else {
-      const response = { status: 'error', ...this.toProdJSON() };
+      const response = { status: 'error', error: { ...this.toProdJSON() } };
       return c.json(response, statusCodes[this.type]); // type is the status code
     }
   }
