@@ -131,7 +131,7 @@ class AuthClient {
           expires_at: custom_session.expires_at,
         }),
         {
-          expiration: custom_session.expires_at,
+          expiration: custom_session.expires_at / 1000,
         }
       );
 

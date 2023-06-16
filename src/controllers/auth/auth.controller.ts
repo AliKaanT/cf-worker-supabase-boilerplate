@@ -51,7 +51,7 @@ class Auth implements IAuth {
     };
 
     await c.env.KV_AUTH_SESSIONS.put(custom_access_token, JSON.stringify(custom_session), {
-      expiration: custom_session.expires_at,
+      expiration: custom_session.expires_at / 1000,
     });
 
     setCookie(c, 'AUTH-ACCESS-TOKEN', custom_access_token, {
@@ -234,7 +234,7 @@ class Auth implements IAuth {
     };
 
     await c.env.KV_AUTH_SESSIONS.put(custom_access_token, JSON.stringify(custom_session), {
-      expiration: custom_session.expires_at,
+      expiration: custom_session.expires_at / 1000,
     });
 
     setCookie(c, 'AUTH-ACCESS-TOKEN', custom_access_token, {
