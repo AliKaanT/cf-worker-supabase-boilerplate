@@ -3,7 +3,7 @@ import ENV from '../types/ContextEnv.types';
 import { z } from 'zod';
 import CustomError, { ErrorTypes } from '../error/CustomError.class';
 
-export async function parseBodyByContentType<T>(c: Context<ENV>, schema: z.ZodTypeAny, errCode: string): Promise<T> {
+export async function parseBodyByContentType<T>(c: Context<ENV>, schema: z.ZodTypeAny): Promise<T> {
   let body: any;
   if (c.req.header('content-type') === 'application/json') {
     body = await c.req.json();
@@ -13,7 +13,7 @@ export async function parseBodyByContentType<T>(c: Context<ENV>, schema: z.ZodTy
 
   const validation = schema.safeParse(body);
   if (!validation.success) {
-    throw new CustomError(errCode, validation.error, ErrorTypes.ValidationError);
+    throw new CustomError('Validation', validation.error, ErrorTypes.ValidationError);
   }
   return validation.data as T;
 }

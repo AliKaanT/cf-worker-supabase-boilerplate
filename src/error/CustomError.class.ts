@@ -75,8 +75,6 @@ export default class CustomError extends Error implements ICustomError {
       isDev = process.env.NODE_ENV?.toLocaleLowerCase() === 'development';
     }
 
-    console.log(process.env.NODE_ENV);
-
     if (isDev) {
       const response = { status: 'error', error: { ...this } };
       return c.json(response, statusCodes[this.type]); // type is the status code

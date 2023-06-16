@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import ENV from '../../types/ContextEnv.types';
 import { parseBodyByContentType } from '../../helpers/bodyParser.helper';
-import { loginReqBodySchema } from './schema';
+import { loginReqBodySchema, resgisterReqBodySchema } from './schema';
 import { z } from 'zod';
 import CustomError, { ErrorTypes } from '../../error/CustomError.class';
 import { generateRandomString } from '../../helpers/general.helper';
@@ -20,7 +20,7 @@ export interface IAuth {
 
 class Auth implements IAuth {
   public async login(c: Context<ENV>): Promise<Response> {
-    const body = await parseBodyByContentType<z.infer<typeof loginReqBodySchema>>(c, loginReqBodySchema, 'AUTH-001');
+    const body = await parseBodyByContentType<z.infer<typeof loginReqBodySchema>>(c, loginReqBodySchema);
 
     const supabaseClient = c.get('ANON_CLIENT');
 
@@ -30,7 +30,14 @@ class Auth implements IAuth {
     });
 
     if (loginError !== null) {
-      throw new CustomError('AUTH-002', loginError, ErrorTypes.SupabaseError);
+      if (loginError.message.includes('credentials')) {
+        throw new CustomError('AUTH-006', loginError, ErrorTypes.AuthenticationError);
+      } else if (loginError.message.includes('confirm')) {
+        // resend email confirm email
+        await supabaseClient.auth.resend({ email: body.email, type: 'signup' });
+        throw new CustomError('AUTH-007', loginError, ErrorTypes.AuthenticationError);
+      }
+      throw new CustomError('Supabase', loginError, ErrorTypes.SupabaseError);
     }
 
     const custom_access_token = generateRandomString(128);
@@ -50,6 +57,7 @@ class Auth implements IAuth {
     });
 
     return c.json({
+      status: 'success',
       message: 'Succesfully logged in.',
       data: {
         'AUTH-ACCESS-TOKEN': custom_access_token,
@@ -63,6 +71,7 @@ class Auth implements IAuth {
     await c.env.KV_AUTH_SESSIONS.delete(session.custom_access_token);
 
     return c.json({
+      status: 'success',
       message: 'Succesfully logged out.',
     });
   }
@@ -71,9 +80,55 @@ class Auth implements IAuth {
     const session = c.get('CUSTOM_AUTH_SESSION');
 
     return c.json({
+      status: 'success',
       message: 'Session is valid.',
       role: session.role,
       isValid: true,
+    });
+  }
+
+  public async getUser(c: Context<ENV>): Promise<Response> {
+    const session = c.get('CUSTOM_AUTH_SESSION');
+
+    return c.json({
+      message: 'User data',
+      data: { email: session.user.email, ...session.user.user_metadata, role: session.user.app_metadata.role },
+    });
+  }
+
+  public async register(c: Context<ENV>): Promise<Response> {
+    const body = await parseBodyByContentType<z.infer<typeof resgisterReqBodySchema>>(c, resgisterReqBodySchema);
+
+    if (body.password !== body.password_confirm) throw new CustomError('AUTH-004', {}, ErrorTypes.ValidationError);
+
+    const supabaseClient = c.get('SERVICE_CLIENT');
+
+    const { error: registerError } = await supabaseClient.auth.admin.createUser({
+      email: body.email,
+      password: body.password,
+      email_confirm: false,
+      user_metadata: {
+        name: body.name,
+        surname: body.surname,
+        username: body.username,
+      },
+      app_metadata: {
+        role: 'user',
+      },
+    });
+
+    if (registerError !== null) {
+      if (registerError.message.includes('unique') || registerError.message.includes('already')) {
+        throw new CustomError('AUTH-005', registerError, ErrorTypes.AuthenticationError);
+      }
+      throw new CustomError('Supabase', registerError, ErrorTypes.SupabaseError);
+    }
+
+    await supabaseClient.auth.resend({ email: body.email, type: 'signup' });
+
+    return c.json({
+      status: 'success',
+      message: 'Succesfully registered. Please check your email for verification.',
     });
   }
 }

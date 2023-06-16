@@ -1,0 +1,10 @@
+{
+  "Validation": {
+    "message": "Validation failed",
+    "devMessage": "Validation error"
+  },
+  "Supabase": {
+    "message": "Supabase error",
+    "devMessage": "Supabase error"
+  }
+}

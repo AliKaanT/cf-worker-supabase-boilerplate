@@ -14,10 +14,8 @@ app.use('/*', setSupabaseClientsMw);
 app.post('/auth/login', Auth.login);
 app.post('/auth/logout', authMw(AuthRoles.Any), Auth.logout);
 app.get('/auth/check-session', authMw(AuthRoles.Any), Auth.checkSession);
-
-app.get('/test', async (c) => {
-  return c.text('f');
-});
+app.get('/auth/get-user', authMw(AuthRoles.Any), Auth.getUser);
+app.post('/auth/register', Auth.register);
 
 app.onError(ErrorHandler);
 

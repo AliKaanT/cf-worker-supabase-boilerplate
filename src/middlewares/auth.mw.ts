@@ -8,7 +8,7 @@ import { AuthSession, Session, User } from '@supabase/supabase-js';
 class AuthClient {
   private readonly c: Context<ENV>;
   private isAuth: boolean = false;
-  private role: AuthRoles = AuthRoles.Any; // TODO : role system
+  private role: AuthRoles = AuthRoles.Any;
 
   private sb_aceess_token: string = '';
   private sb_refresh_token: string = '';
@@ -41,9 +41,9 @@ class AuthClient {
     };
   }
 
-  private authSuccess(role: AuthRoles, sb_session: Session, user: User, expires_at: number): void {
+  private authSuccess(sb_session: Session, user: User, expires_at: number): void {
     this.isAuth = true;
-    this.role = role;
+    this.role = user.app_metadata?.role ?? this.role;
     this.sb_aceess_token = sb_session.access_token;
     this.sb_refresh_token = sb_session.refresh_token;
     this.user = user;
@@ -77,7 +77,7 @@ class AuthClient {
 
     if (authError === null && authData.session !== null && authData.user !== null) {
       // Both sessions are valid
-      this.authSuccess(AuthRoles.Any, authData?.session, authData?.user, custom_session.expires_at);
+      this.authSuccess(authData?.session, authData?.user, custom_session.expires_at);
     }
 
     // Custom session is valid but supabase session is not, Lets make a new supabase session
@@ -132,19 +132,24 @@ class AuthClient {
         })
       );
 
-      this.authSuccess(AuthRoles.Any, newSupabaseSession?.session, newSupabaseSession?.user, custom_session.expires_at);
+      this.authSuccess(newSupabaseSession?.session, newSupabaseSession?.user, custom_session.expires_at);
     } catch (err) {}
   }
 }
 
-export default (role: AuthRoles): ((c: Context<ENV>, next: any) => Promise<void>) => {
+export default (...role: AuthRoles[]): ((c: Context<ENV>, next: any) => Promise<void>) => {
   return async (c: Context<ENV>, next: any): Promise<void> => {
     const authClient = new AuthClient(c);
     await authClient.init();
 
     if (!authClient.getIsAuth()) throw new CustomError('Unauthenticated', {}, ErrorTypes.AuthenticationError);
-    // if (authClient.getRole() !== role) throw new CustomError('Unauthorized', {}, ErrorTypes.AuthorizationError);
-    // TODO : role system
+
+    let authorized = false; // true if any of the roles match
+    role.forEach((r) => {
+      if (r === authClient.getRole()) authorized = true;
+      if (r === AuthRoles.Any) authorized = true;
+    });
+    if (!authorized) throw new CustomError('Unauthorized', {}, ErrorTypes.AuthorizationError);
 
     const session = authClient.getStorableSession();
     if (session !== null) c.set('CUSTOM_AUTH_SESSION', session);

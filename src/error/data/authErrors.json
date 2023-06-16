@@ -7,36 +7,24 @@
     "message": "Sorry, you are not authorized to access this resource",
     "devMessage": "User is not authorized to access this resource"
   },
-  "AUTH-001": {
+  "AUTH-006": {
     "message": "",
-    "devMessage": "Zod Validation Error while logging in"
+    "devMessage": "Invalid email or password"
   },
-  "AUTH-002": {
+  "AUTH-007": {
     "message": "",
-    "devMessage": "Invalid login credintials while authenticating user"
-  },
-  "AUTH-003": {
-    "message": "Sorry, We are not able to authenticate you at this time due to technical issues on our end. Please try again later. If the problem persists, please contact us",
-    "devMessage": "Supabase Error while authenticating user"
+    "devMessage": "Email not confirmed"
   },
   "AUTH-004": {
     "message": "",
-    "devMessage": "User email is not confirmed"
+    "devMessage": "Password and Confirm Password do not match"
+  },
+  "AUTH-005": {
+    "message": "",
+    "devMessage": "This email registered before"
   },
   "USER-008": {
     "message": "Sorry, we are not able to access your account at this time due to technical issues on our end. Please try again later. If the problem persists, please contact us",
     "devMessage": "Can't access auth.user table"
-  },
-  "AUTH-005": {
-    "message": "",
-    "devMessage": "Zod Error while signing up"
-  },
-  "AUTH-006": {
-    "message": "",
-    "devMessage": "Supabase Error while creating user"
-  },
-  "AUTH-007": {
-    "message": "",
-    "devMessage": "There is already a user with this email address"
   }
 }
