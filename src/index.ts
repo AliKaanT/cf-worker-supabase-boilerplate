@@ -16,6 +16,9 @@ app.post('/auth/logout', authMw(AuthRoles.Any), Auth.logout);
 app.get('/auth/check-session', authMw(AuthRoles.Any), Auth.checkSession);
 app.get('/auth/get-user', authMw(AuthRoles.Any), Auth.getUser);
 app.post('/auth/register', Auth.register);
+app.post('/auth/forgot-password', Auth.forgotPassword);
+app.post('/auth/reset-password', Auth.resetPassword);
+app.post('/auth/change-password', authMw(AuthRoles.Any), Auth.changePassword);
 
 app.onError(ErrorHandler);
 

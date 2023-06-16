@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import ENV from '../../types/ContextEnv.types';
 import { parseBodyByContentType } from '../../helpers/bodyParser.helper';
-import { loginReqBodySchema, resgisterReqBodySchema } from './schema';
+import { changePasswordReqBodySchema, forgotPasswordReqBodySchema, loginReqBodySchema, resetPasswordReqBodySchema, resgisterReqBodySchema } from './schema';
 import { z } from 'zod';
 import CustomError, { ErrorTypes } from '../../error/CustomError.class';
 import { generateRandomString } from '../../helpers/general.helper';
@@ -31,11 +31,11 @@ class Auth implements IAuth {
 
     if (loginError !== null) {
       if (loginError.message.includes('credentials')) {
-        throw new CustomError('AUTH-006', loginError, ErrorTypes.AuthenticationError);
+        throw new CustomError('AUTH-002', loginError, ErrorTypes.AuthenticationError);
       } else if (loginError.message.includes('confirm')) {
         // resend email confirm email
         await supabaseClient.auth.resend({ email: body.email, type: 'signup' });
-        throw new CustomError('AUTH-007', loginError, ErrorTypes.AuthenticationError);
+        throw new CustomError('AUTH-003', loginError, ErrorTypes.AuthenticationError);
       }
       throw new CustomError('Supabase', loginError, ErrorTypes.SupabaseError);
     }
@@ -99,8 +99,6 @@ class Auth implements IAuth {
   public async register(c: Context<ENV>): Promise<Response> {
     const body = await parseBodyByContentType<z.infer<typeof resgisterReqBodySchema>>(c, resgisterReqBodySchema);
 
-    if (body.password !== body.password_confirm) throw new CustomError('AUTH-004', {}, ErrorTypes.ValidationError);
-
     const supabaseClient = c.get('SERVICE_CLIENT');
 
     const { error: registerError } = await supabaseClient.auth.admin.createUser({
@@ -119,16 +117,87 @@ class Auth implements IAuth {
 
     if (registerError !== null) {
       if (registerError.message.includes('unique') || registerError.message.includes('already')) {
-        throw new CustomError('AUTH-005', registerError, ErrorTypes.AuthenticationError);
+        throw new CustomError('AUTH-001', registerError, ErrorTypes.AuthenticationError);
       }
       throw new CustomError('Supabase', registerError, ErrorTypes.SupabaseError);
     }
 
-    await supabaseClient.auth.resend({ email: body.email, type: 'signup' });
-
     return c.json({
       status: 'success',
       message: 'Succesfully registered. Please check your email for verification.',
+    });
+  }
+
+  public async forgotPassword(c: Context<ENV>): Promise<Response> {
+    const body = await parseBodyByContentType<z.infer<typeof forgotPasswordReqBodySchema>>(c, forgotPasswordReqBodySchema);
+
+    const supabaseClient = c.get('SERVICE_CLIENT');
+    console.log(body.email);
+    const { error: forgotPasswordError } = await supabaseClient.auth.resetPasswordForEmail(body.email, {
+      redirectTo: c.env.RESET_PASSWORD_REDIRECT_URL,
+    });
+    if (forgotPasswordError !== null) {
+      throw new CustomError('Supabase', forgotPasswordError, ErrorTypes.SupabaseError);
+    }
+
+    return c.json({
+      status: 'success',
+      message: 'Succesfully sent reset password email.',
+    });
+  }
+
+  public async resetPassword(c: Context<ENV>): Promise<Response> {
+    const body = await parseBodyByContentType<z.infer<typeof resetPasswordReqBodySchema>>(c, resetPasswordReqBodySchema);
+
+    const supabaseClient = c.get('ANON_CLIENT');
+
+    const { error: sessionError } = await supabaseClient.auth.setSession({ access_token: body.access_token, refresh_token: body.refresh_token });
+
+    if (sessionError !== null) {
+      throw new CustomError('Supabase', sessionError, ErrorTypes.SupabaseError);
+    }
+
+    const { error: resetPasswordError } = await supabaseClient.auth.updateUser({
+      password: body.password,
+    });
+
+    if (resetPasswordError !== null) {
+      throw new CustomError('Supabase', resetPasswordError, ErrorTypes.SupabaseError);
+    }
+
+    return c.json({
+      status: 'success',
+      message: 'Succesfully reset password.',
+    });
+  }
+
+  public async changePassword(c: Context<ENV>): Promise<Response> {
+    const body = await parseBodyByContentType<z.infer<typeof changePasswordReqBodySchema>>(c, changePasswordReqBodySchema);
+
+    const session = c.get('CUSTOM_AUTH_SESSION');
+
+    const supabaseClient = c.get('ANON_CLIENT');
+
+    const { error: loginError } = await supabaseClient.auth.signInWithPassword({
+      email: session.user.email ?? '',
+      password: body.old_password,
+    });
+
+    if (loginError !== null) {
+      throw new CustomError('AUTH-004', {}, ErrorTypes.AuthenticationError);
+    }
+
+    const { error: changePasswordError } = await supabaseClient.auth.updateUser({
+      password: body.new_password,
+    });
+
+    if (changePasswordError !== null) {
+      throw new CustomError('Supabase', changePasswordError, ErrorTypes.SupabaseError);
+    }
+
+    return c.json({
+      status: 'success',
+      message: 'Succesfully changed password.',
     });
   }
 }

@@ -4,3 +4,5 @@ compatibility_date = "2023-05-08"
 kv_namespaces = [
   { binding = "KV_AUTH_SESSIONS", id = "8cdced6478a149dc9e0a5abbd8b93f39", preview_id = "49989a235f8440c39c72c185cf128252" }
 ]
+[vars]
+RESET_PASSWORD_REDIRECT_URL = "http://localhost:3000/sifre-sifirla"

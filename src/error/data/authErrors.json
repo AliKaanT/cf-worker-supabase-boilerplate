@@ -7,24 +7,20 @@
     "message": "Sorry, you are not authorized to access this resource",
     "devMessage": "User is not authorized to access this resource"
   },
-  "AUTH-006": {
+  "AUTH-001": {
+    "message": "",
+    "devMessage": "This email registered before"
+  },
+  "AUTH-002": {
     "message": "",
     "devMessage": "Invalid email or password"
   },
-  "AUTH-007": {
+  "AUTH-003": {
     "message": "",
     "devMessage": "Email not confirmed"
   },
   "AUTH-004": {
     "message": "",
-    "devMessage": "Password and Confirm Password do not match"
-  },
-  "AUTH-005": {
-    "message": "",
-    "devMessage": "This email registered before"
-  },
-  "USER-008": {
-    "message": "Sorry, we are not able to access your account at this time due to technical issues on our end. Please try again later. If the problem persists, please contact us",
-    "devMessage": "Can't access auth.user table"
+    "devMessage": "Old Password is incorrect while changing password"
   }
 }
