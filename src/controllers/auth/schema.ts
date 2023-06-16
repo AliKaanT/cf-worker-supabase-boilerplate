@@ -28,3 +28,8 @@ export const changePasswordReqBodySchema = z.object({
   old_password: z.string().min(6),
   new_password: z.string().min(6),
 });
+
+export const initializeSessionReqBodySchema = z.object({
+  access_token: z.string(),
+  refresh_token: z.string(),
+});

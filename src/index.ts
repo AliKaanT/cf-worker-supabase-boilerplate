@@ -19,7 +19,7 @@ app.post('/auth/register', Auth.register);
 app.post('/auth/forgot-password', Auth.forgotPassword);
 app.post('/auth/reset-password', Auth.resetPassword);
 app.post('/auth/change-password', authMw(AuthRoles.Any), Auth.changePassword);
-
+app.post('/auth/initialize-session', Auth.initializeSession);
 app.onError(ErrorHandler);
 
 export default app;

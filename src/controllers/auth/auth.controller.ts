@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import ENV from '../../types/ContextEnv.types';
 import { parseBodyByContentType } from '../../helpers/bodyParser.helper';
-import { changePasswordReqBodySchema, forgotPasswordReqBodySchema, loginReqBodySchema, resetPasswordReqBodySchema, resgisterReqBodySchema } from './schema';
+import { changePasswordReqBodySchema, forgotPasswordReqBodySchema, initializeSessionReqBodySchema, loginReqBodySchema, resetPasswordReqBodySchema, resgisterReqBodySchema } from './schema';
 import { z } from 'zod';
 import CustomError, { ErrorTypes } from '../../error/CustomError.class';
 import { generateRandomString } from '../../helpers/general.helper';
@@ -16,6 +16,7 @@ export interface IAuth {
   forgotPassword: (c: Context<ENV>) => Promise<Response>;
   resetPassword: (c: Context<ENV>) => Promise<Response>;
   changePassword: (c: Context<ENV>) => Promise<Response>;
+  initializeSession: (c: Context<ENV>) => Promise<Response>;
 }
 
 class Auth implements IAuth {
@@ -206,6 +207,47 @@ class Auth implements IAuth {
     return c.json({
       status: 'success',
       message: 'Succesfully changed password.',
+    });
+  }
+
+  public async initializeSession(c: Context<ENV>): Promise<Response> {
+    const body = await parseBodyByContentType<z.infer<typeof initializeSessionReqBodySchema>>(c, initializeSessionReqBodySchema);
+
+    const supabaseClient = c.get('SERVICE_CLIENT');
+
+    const { data: sessionData, error: sessionError } = await supabaseClient.auth.setSession({ access_token: body.access_token, refresh_token: body.refresh_token });
+
+    if (sessionError !== null) {
+      throw new CustomError('Supabase', sessionError, ErrorTypes.SupabaseError);
+    }
+    if (sessionData === null || sessionData.user === null || sessionData.session === null) {
+      throw new CustomError('AUTH-005', {}, ErrorTypes.AuthenticationError);
+    }
+
+    const custom_access_token = generateRandomString(128);
+
+    const custom_session: KVAuthSession = {
+      access_token: sessionData.session.access_token,
+      refresh_token: sessionData.session.refresh_token,
+      user: sessionData.user,
+      expires_at: Date.now() + 1000 * 60 * 60 * 24 * 30, // 30 days TODO : remember me
+    };
+
+    await c.env.KV_AUTH_SESSIONS.put(custom_access_token, JSON.stringify(custom_session), {
+      expiration: custom_session.expires_at,
+    });
+
+    setCookie(c, 'AUTH-ACCESS-TOKEN', custom_access_token, {
+      path: '/',
+      expires: new Date(custom_session.expires_at),
+    });
+
+    return c.json({
+      status: 'success',
+      message: 'Succesfully logged in.',
+      data: {
+        'AUTH-ACCESS-TOKEN': custom_access_token,
+      },
     });
   }
 }
