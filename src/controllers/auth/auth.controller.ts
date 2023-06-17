@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import ENV from '../../types/ContextEnv.types';
 import { parseBodyByContentType } from '../../helpers/bodyParser.helper';
-import { changePasswordReqBodySchema, forgotPasswordReqBodySchema, initializeSessionReqBodySchema, loginReqBodySchema, resetPasswordReqBodySchema, resgisterReqBodySchema } from './schema';
+import { changePasswordReqBodySchema, forgotPasswordReqBodySchema, initializeSessionReqBodySchema, loginReqBodySchema, resetPasswordReqBodySchema, resgisterReqBodySchema } from './auth.schema';
 import { z } from 'zod';
 import CustomError, { ErrorTypes } from '../../error/CustomError.class';
 import { generateRandomString } from '../../helpers/general.helper';

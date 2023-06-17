@@ -10,7 +10,13 @@ export default async (c: Context<ENV>, next: any): Promise<void> => {
       persistSession: false,
     },
   });
-  const SERVICE_CLIENT = createClient<Database>(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE);
+
+  const SERVICE_CLIENT = createClient<Database>(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 
   c.set('ANON_CLIENT', ANON_CLIENT);
   c.set('SERVICE_CLIENT', SERVICE_CLIENT);
