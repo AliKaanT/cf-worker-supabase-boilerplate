@@ -2,7 +2,6 @@ import { Context } from 'hono';
 import ENV from '../../types/ContextEnv.types';
 import { parseBodyByContentType } from '../../helpers/bodyParser.helper';
 import { changePasswordReqBodySchema, forgotPasswordReqBodySchema, initializeSessionReqBodySchema, loginReqBodySchema, resetPasswordReqBodySchema, resgisterReqBodySchema } from './auth.schema';
-import { z } from 'zod';
 import CustomError, { ErrorTypes } from '../../error/CustomError.class';
 import { generateRandomString } from '../../helpers/general.helper';
 import { setCookie } from 'hono/cookie';
@@ -21,7 +20,7 @@ export interface IAuth {
 
 class Auth implements IAuth {
   public async login(c: Context<ENV>): Promise<Response> {
-    const body = await parseBodyByContentType<z.infer<typeof loginReqBodySchema>>(c, loginReqBodySchema);
+    const body = await parseBodyByContentType<typeof loginReqBodySchema>(c, loginReqBodySchema);
 
     const supabaseClient = c.get('ANON_CLIENT');
 
@@ -100,7 +99,7 @@ class Auth implements IAuth {
   }
 
   public async register(c: Context<ENV>): Promise<Response> {
-    const body = await parseBodyByContentType<z.infer<typeof resgisterReqBodySchema>>(c, resgisterReqBodySchema);
+    const body = await parseBodyByContentType<typeof resgisterReqBodySchema>(c, resgisterReqBodySchema);
 
     const supabaseClient = c.get('SERVICE_CLIENT');
 
@@ -138,7 +137,7 @@ class Auth implements IAuth {
   }
 
   public async forgotPassword(c: Context<ENV>): Promise<Response> {
-    const body = await parseBodyByContentType<z.infer<typeof forgotPasswordReqBodySchema>>(c, forgotPasswordReqBodySchema);
+    const body = await parseBodyByContentType<typeof forgotPasswordReqBodySchema>(c, forgotPasswordReqBodySchema);
 
     const supabaseClient = c.get('SERVICE_CLIENT');
     console.log(body.email);
@@ -156,7 +155,7 @@ class Auth implements IAuth {
   }
 
   public async resetPassword(c: Context<ENV>): Promise<Response> {
-    const body = await parseBodyByContentType<z.infer<typeof resetPasswordReqBodySchema>>(c, resetPasswordReqBodySchema);
+    const body = await parseBodyByContentType<typeof resetPasswordReqBodySchema>(c, resetPasswordReqBodySchema);
 
     const supabaseClient = c.get('ANON_CLIENT');
 
@@ -181,7 +180,7 @@ class Auth implements IAuth {
   }
 
   public async changePassword(c: Context<ENV>): Promise<Response> {
-    const body = await parseBodyByContentType<z.infer<typeof changePasswordReqBodySchema>>(c, changePasswordReqBodySchema);
+    const body = await parseBodyByContentType<typeof changePasswordReqBodySchema>(c, changePasswordReqBodySchema);
 
     const session = c.get('CUSTOM_AUTH_SESSION');
 
@@ -211,7 +210,7 @@ class Auth implements IAuth {
   }
 
   public async initializeSession(c: Context<ENV>): Promise<Response> {
-    const body = await parseBodyByContentType<z.infer<typeof initializeSessionReqBodySchema>>(c, initializeSessionReqBodySchema);
+    const body = await parseBodyByContentType<typeof initializeSessionReqBodySchema>(c, initializeSessionReqBodySchema);
 
     const supabaseClient = c.get('SERVICE_CLIENT');
 

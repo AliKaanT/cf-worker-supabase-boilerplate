@@ -3,7 +3,7 @@ import ENV from '../types/ContextEnv.types';
 import { z } from 'zod';
 import CustomError, { ErrorTypes } from '../error/CustomError.class';
 
-export async function parseBodyByContentType<T>(c: Context<ENV>, schema: z.ZodTypeAny): Promise<T> {
+export async function parseBodyByContentType<T extends z.AnyZodObject>(c: Context<ENV>, schema: z.ZodTypeAny): Promise<z.infer<T>> {
   let body: any;
   if (c.req.header('content-type') === 'application/json') {
     body = await c.req.json();
