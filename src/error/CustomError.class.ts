@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import importedErrors from './data/errors';
 import type { Context } from 'hono';
+import ENV from '../types/ContextEnv.types';
 interface ICustomError {
   code: string;
   message: string;
@@ -67,12 +68,12 @@ export default class CustomError extends Error implements ICustomError {
   /**
    *
    * @param c is a instance of Context class from hono
-   * @param isDev is a boolean which tells if the error is in development mode or not, if it's null then it checks the NODE_ENV
+   * @param isDev is a boolean which tells if the error is in development mode or not, if it's null then it checks the ENV variable
    * @returns {Response} returns the response object it removes devMessage depends on Env type
    */
-  public getResponseObject(c: Context, isDev?: boolean): Response {
+  public getResponseObject(c: Context<ENV>, isDev?: boolean): Response {
     if (isDev === undefined) {
-      isDev = process.env.NODE_ENV?.toLocaleLowerCase() === 'development';
+      isDev = c.env.ENV_MODE?.toLocaleLowerCase() === 'development';
     }
 
     if (isDev) {
@@ -98,7 +99,6 @@ export default class CustomError extends Error implements ICustomError {
       devMessage: this.devMessage,
       data: this.data,
       ip: ip ?? null,
-      extra: null, // TODO: add extra
       path,
     });
     if (error !== null) {

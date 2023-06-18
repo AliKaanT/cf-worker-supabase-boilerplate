@@ -12,7 +12,7 @@ export default async (err: Error, c: Context<ENV>): Promise<Response> => {
       // if its not CustomError
       await supabase.from('errors').insert({
         code: 'unknown',
-        extra: err,
+        data: err?.message,
       });
       return c.json({ status: 'error', message: err?.message }, 500);
     }

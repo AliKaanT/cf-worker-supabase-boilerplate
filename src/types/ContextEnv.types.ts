@@ -9,6 +9,7 @@ export default interface ENV {
     KV_AUTH_SESSIONS: KVNamespace;
     RESET_PASSWORD_REDIRECT_URL: string;
     REGISTER_REDIRECT_URL: string;
+    ENV_MODE: string;
   };
   Variables: {
     ANON_CLIENT: SupabaseClient;
