@@ -96,7 +96,7 @@ export default class CustomError extends Error implements ICustomError {
       type: this.type.toString(),
       code: this.code,
       message: this.message,
-      devMessage: this.devMessage,
+      dev_message: this.devMessage,
       data: this.data,
       ip: ip ?? null,
       path,
