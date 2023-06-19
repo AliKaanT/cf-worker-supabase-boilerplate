@@ -8,33 +8,33 @@ export interface Database {
           code: string | null;
           created_at: string | null;
           data: Json | null;
-          devMessage: string | null;
-          extra: Json | null;
+          dev_message: string | null;
           id: number;
           ip: string | null;
           message: string | null;
+          path: string | null;
           type: string | null;
         };
         Insert: {
           code?: string | null;
           created_at?: string | null;
           data?: Json | null;
-          devMessage?: string | null;
-          extra?: Json | null;
+          dev_message?: string | null;
           id?: number;
           ip?: string | null;
           message?: string | null;
+          path?: string | null;
           type?: string | null;
         };
         Update: {
           code?: string | null;
           created_at?: string | null;
           data?: Json | null;
-          devMessage?: string | null;
-          extra?: Json | null;
+          dev_message?: string | null;
           id?: number;
           ip?: string | null;
           message?: string | null;
+          path?: string | null;
           type?: string | null;
         };
         Relationships: [];
@@ -45,7 +45,6 @@ export interface Database {
           email: string | null;
           id: string;
           name: string | null;
-          role: string | null;
           surname: string | null;
           username: string | null;
         };
@@ -54,7 +53,6 @@ export interface Database {
           email?: string | null;
           id: string;
           name?: string | null;
-          role?: string | null;
           surname?: string | null;
           username?: string | null;
         };
@@ -63,11 +61,17 @@ export interface Database {
           email?: string | null;
           id?: string;
           name?: string | null;
-          role?: string | null;
           surname?: string | null;
           username?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'users_id_fkey';
+            columns: ['id'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
     };
     Views: {
