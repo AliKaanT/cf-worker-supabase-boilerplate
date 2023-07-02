@@ -78,6 +78,7 @@ class AuthClient {
     if (authError === null && authData.session !== null && authData.user !== null) {
       // Both sessions are valid
       this.authSuccess(authData?.session, authData?.user, custom_session.expires_at);
+      return null;
     }
 
     // Custom session is valid but supabase session is not, Lets make a new supabase session
@@ -116,7 +117,7 @@ class AuthClient {
       const custom_session = await this.checkCustomSession(custom_access_token);
       if (custom_session === null) return;
 
-      // This function either sets the session or creates a new session
+      // This function either sets the session and return null or creates a new session and return it
       const newSupabaseSession = await this.createSupabaseSession(custom_session);
       if (newSupabaseSession === null || newSupabaseSession.session === null || newSupabaseSession.user === null) return;
 
