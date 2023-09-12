@@ -2,9 +2,9 @@ name = "cf-worker-supabase-boilerplate"
 main = "src/index.ts"
 compatibility_date = "2023-05-08"
 kv_namespaces = [
-  { binding = "KV_AUTH_SESSIONS", id = "8cdced6478a149dc9e0a5abbd8b93f39", preview_id = "49989a235f8440c39c72c185cf128252" }
+  { binding = "KV_AUTH_SESSIONS", id = "31f66fe9b847416eb25225617f75ee6c", preview_id = "9e0173137b294aa8a677a636a067f5c0" }
 ]
 [vars]
 RESET_PASSWORD_REDIRECT_URL = "http://localhost:3000/reset-password"
 REGISTER_REDIRECT_URL = "http://localhost:3000/register-success"
-ENV_MODE = 'development'
+ENV_MODE = 'production'
